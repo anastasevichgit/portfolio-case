@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="uk"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Збірка · Оплати</title>
+<style>
+/* Wireframe-база: сірий, один акцент. Візуальний стиль — на кроці 2 */
+:root{
+  --bg:#f3f3f0; --paper:#fff; --ink:#151515; --mute:#707070; --line:#dadad5; --soft:#e9e9e4;
+  --acc:#2f5bff; --bad:#b9533d; --good:#1f7a52;
+  --r:14px; --f:-apple-system,BlinkMacSystemFont,"Inter","Segoe UI",Roboto,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--f);background:var(--bg);color:var(--ink);line-height:1.45;-webkit-font-smoothing:antialiased}
+button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
+.lbl{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute)}
+.wf-note{font-size:11px;color:var(--acc);font-family:ui-monospace,Menlo,monospace}
+.pnav{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:999;display:flex;gap:2px;
+  background:var(--ink);padding:4px;border-radius:999px;box-shadow:0 6px 24px rgba(0,0,0,.18)}
+.pnav a{color:#bbb;text-decoration:none;font-size:12px;padding:6px 12px;border-radius:999px}
+.pnav a:hover{color:#fff}
+.pnav a.on{background:#fff;color:var(--ink)}
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&display=swap" rel="stylesheet">
+<style>
+.wrap{max-width:1040px;margin:0 auto;padding:32px 20px 120px}
+section{padding:72px 0;border-bottom:1px solid var(--line)}
+section:last-child{border:0}
+h2{font-size:clamp(26px,3.4vw,36px);letter-spacing:-.025em;line-height:1.1;margin:8px 0 28px}
+.todo{display:inline-block;font-size:11px;font-family:ui-monospace,Menlo,monospace;color:var(--acc);border:1px dashed var(--acc);border-radius:6px;padding:2px 6px;margin-left:8px;vertical-align:middle}
+
+/* 1 · hero bento */
+.bento{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.t{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:20px;display:flex;flex-direction:column;min-height:120px}
+.t.dark{background:var(--ink);color:#fff;border-color:var(--ink)}
+.t.dark .lbl{color:#999}
+.t.hero{grid-column:span 2;min-height:260px}
+.t.hero h1{font-size:clamp(32px,4.6vw,56px);line-height:1;letter-spacing:-.03em;margin-top:auto}
+.t.hero p{color:#aaa;margin-top:12px;font-size:14px;max-width:520px}
+.t.claim p{font-size:clamp(20px,2.4vw,28px);line-height:1.15;letter-spacing:-.015em;margin-top:auto}
+.t h3{font-size:20px;letter-spacing:-.01em;margin-top:auto}
+.t .num{font-variant-numeric:tabular-nums}
+
+/* 2 · хмара питань */
+.cloud{position:relative;height:340px}
+.bub{position:absolute;background:var(--paper);border:1px solid var(--line);border-radius:18px 18px 18px 4px;padding:10px 14px;font-size:15px;white-space:nowrap;
+  opacity:0;transform:scale(.8);transition:opacity .35s,transform .35s cubic-bezier(.3,1.6,.5,1)}
+.bub:nth-child(even){border-radius:18px 18px 4px 18px;background:var(--soft)}
+.cloud.in .bub{opacity:1;transform:none}
+.bub:hover{transform:rotate(-2deg) scale(1.04)!important}
+
+/* 3 · задача */
+.big{font-size:clamp(22px,3.2vw,34px);line-height:1.2;letter-spacing:-.015em;max-width:760px}
+.who{display:flex;gap:10px;flex-wrap:wrap;margin-top:28px;align-items:center}
+.who span{padding:8px 14px;border-radius:999px;background:var(--soft);position:relative;transition:color .4s}
+.who span::after{content:"";position:absolute;left:10px;right:10px;top:50%;height:2px;background:var(--bad);transform:scaleX(0);transform-origin:left;transition:transform .5s}
+.who.go span:nth-of-type(2)::after{transition-delay:.25s}.who.go span:nth-of-type(3)::after{transition-delay:.5s}
+.who.go span::after{transform:scaleX(1)}
+.who.go span{color:var(--mute)}
+.who em{font-style:normal;padding:8px 14px;border-radius:999px;background:var(--ink);color:#fff;opacity:0;transform:translateX(-6px);transition:.5s 1s}
+.who.go em{opacity:1;transform:none}
+
+/* 4 · порівняння з повзунком */
+.cmp{position:relative;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;user-select:none;background:var(--paper);margin-top:48px;touch-action:pan-y}
+.layer .head,.layer .row{display:grid;grid-template-columns:220px 1fr;gap:16px;padding:0 20px;align-items:center}
+.layer .head{height:44px}
+.layer .row{height:64px;border-top:1px solid var(--soft);font-size:14px;line-height:1.3}
+.layer .row span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.layer .row b{font-weight:600}
+.layer.before{position:absolute;inset:0;background:#f6ebe7;color:var(--bad);clip-path:inset(0 50% 0 0)}
+.layer.before .row b{color:var(--ink)}
+.handle{position:absolute;top:0;bottom:0;left:50%;width:2px;background:var(--ink);cursor:ew-resize}
+.handle::after{content:"⇆";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:42px;height:42px;border-radius:50%;background:var(--ink);color:#fff;display:grid;place-items:center}
+.hint{font-size:12px;color:var(--mute);margin-top:10px}
+
+/* 5 · таймлайн + хаос */
+.seg{display:inline-flex;background:var(--soft);border-radius:999px;padding:4px;margin-bottom:32px}
+.seg button{padding:8px 18px;border-radius:999px;font-size:14px}
+.seg button.on{background:var(--ink);color:#fff}
+.tl{position:relative;padding-left:150px}
+.tl::before{content:"";position:absolute;left:136px;top:8px;bottom:8px;width:2px;background:var(--line)}
+.step{position:relative;padding:0 0 30px;transition:transform .5s}
+.step::before{content:"";position:absolute;left:-20px;top:4px;width:12px;height:12px;border-radius:50%;background:var(--paper);border:2px solid var(--ink)}
+.step b{display:block;margin-bottom:4px}
+.step li{list-style:none;color:var(--mute);font-size:15px}
+.chaos{position:absolute;inset:0;pointer-events:none;overflow:visible}
+.chaos path{fill:none;stroke:var(--bad);stroke-width:2;stroke-linecap:round}
+.chaos text{font-family:Caveat,cursive;font-size:20px;fill:var(--bad);opacity:0;transition:opacity .4s}
+.tl.real .chaos text{opacity:1}
+.tl.real .step:nth-child(odd){transform:rotate(-.6deg) translateX(3px)}
+.tl.real .step:nth-child(even){transform:rotate(.5deg)}
+.cap{font-family:Caveat,cursive;font-size:22px;color:var(--bad);margin:-18px 0 24px;opacity:0;transition:opacity .4s}
+.cap.on{opacity:1}
+
+/* 6 · артефакти */
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips span{border:1px dashed var(--mute);border-radius:8px;padding:9px 13px;font-size:14px;background:var(--paper)}
+
+/* 7 · результат */
+.check li{list-style:none;padding:16px 0;border-bottom:1px solid var(--line);font-size:clamp(18px,2vw,22px);display:flex;gap:14px;letter-spacing:-.01em}
+.check li::before{content:"✓";color:var(--good)}
+
+@media(max-width:760px){
+  .bento{grid-template-columns:1fr 1fr}.t.hero{grid-column:span 2}.t.claim{grid-column:span 2}
+  .cloud{height:auto;display:flex;flex-wrap:wrap;gap:8px}.bub{position:static;white-space:normal}
+  .layer .head,.layer .row{grid-template-columns:110px 1fr;gap:10px;padding:0 12px;font-size:12px}
+  .tl{padding-left:96px}.tl::before{left:82px}
+}
+
+/* режим редагування */
+.edbar{position:fixed;top:16px;right:16px;z-index:1000;display:flex;gap:6px;background:var(--ink);padding:4px;border-radius:999px;box-shadow:0 6px 24px rgba(0,0,0,.18)}
+.edbar button{color:#ddd;font-size:13px;padding:7px 14px;border-radius:999px}
+.edbar button:hover{color:#fff}
+.edbar button.pri{background:#fff;color:var(--ink)}
+.edbar .x{display:none}
+body.editing .edbar .x{display:inline-block}
+body.editing [data-ed]{outline:1px dashed transparent;outline-offset:3px;border-radius:4px;cursor:text}
+body.editing [data-ed]:hover{outline-color:var(--acc)}
+body.editing [data-ed]:focus{outline:2px solid var(--acc);background:rgba(47,91,255,.05)}
+body.editing [data-ed].changed{box-shadow:inset 3px 0 0 var(--acc)}
+.toast{position:fixed;top:64px;right:16px;z-index:1000;background:var(--ink);color:#fff;font-size:13px;padding:8px 14px;border-radius:10px;opacity:0;transition:opacity .3s;pointer-events:none}
+.toast.on{opacity:1}
+</style></head><body>
+<div class="wrap">
+  <div class="wf-note">Збірка v1 — гібрид за вашою схемою. Сірий wireframe, копірайт ще сирий</div>
+
+  <!-- 1 · HERO -->
+  <div class="bento" style="margin-top:16px">
+    <div class="t dark hero"><div class="lbl">Кейс · <span id="co"></span></div><h1 id="title"></h1><p id="desc"></p></div>
+    <div class="t claim"><div class="lbl">Контекст</div><p>Компанія росте швидше, ніж встигають процеси</p></div>
+    <div class="t"><div class="lbl">Стадія</div><h3>Перший рік роботи</h3></div>
+    <div class="t"><div class="lbl">Екосистема</div><h3>FRACTAL</h3></div>
+    <div class="t"><div class="lbl">Зростання</div><h3>4 → <span class="num" id="n">4</span> співробітників</h3></div>
+  </div>
+
+  <!-- 2 · ПРОБЛЕМА -->
+  <section>
+    <div class="lbl">Проблема</div>
+    <h2>Кожна оплата — це питання до когось</h2>
+    <div class="cloud" id="cloud"></div>
+  </section>
+
+  <!-- 3–4 · ЗАДАЧА + БУЛО/СТАЛО -->
+  <section>
+    <div class="lbl">Задача</div>
+    <p class="big" id="task" style="margin-top:12px"></p>
+    <div class="who" id="who"></div>
+
+    <div class="cmp" id="cmp">
+      <div class="layer after"><div class="head lbl"><span></span><span style="text-align:right">Стало →</span></div><div id="la"></div></div>
+      <div class="layer before" id="lb"><div class="head lbl" style="color:var(--bad)"><span>А як…?</span><span>← Було</span></div><div id="lbr"></div></div>
+      <div class="handle" id="h"></div>
+    </div>
+    <div class="hint">Тягніть повзунок, щоб порівняти</div>
+  </section>
+
+  <!-- 5 · ЯК РЕАЛІЗОВАНО -->
+  <section>
+    <div class="lbl">Як реалізовано</div>
+    <h2>Від вимог до звички команди <span class="todo">заголовок — подумати</span></h2>
+    <div class="seg"><button class="on" data-m="plan">Як у плані</button><button data-m="real">Як було насправді</button></div>
+    <div class="cap" id="cap">спойлер: лінійно не буває</div>
+    <div class="tl" id="tl"><svg class="chaos" id="chaos"></svg></div>
+  </section>
+
+  <!-- 6 · АРТЕФАКТИ -->
+  <section>
+    <div class="lbl">Артефакти</div>
+    <h2>На чому тримається процес <span class="todo">артефакти чи інструменти — подумати</span></h2>
+    <div class="chips" id="mat"></div>
+  </section>
+
+  <!-- 7 · РЕЗУЛЬТАТ -->
+  <section>
+    <div class="lbl">Результат</div>
+    <h2>Що змінилось</h2>
+    <ul class="check" id="res"></ul>
+  </section>
+</div>
+<script>
+// Спільний контент для всіх прототипів (сирий текст — шліфуємо на кроці 4)
+window.CASE = {
+  title: "Стандартизація процесу оплат",
+  company: "select form",
+  companyDesc: "Креативна мерч-агенція повного циклу: від концепції до виробництва й доставки.",
+  context: [
+    { k: "Стадія", v: "Перший рік роботи компанії" },
+    { k: "Екосистема", v: "FRACTAL" },
+    { k: "Зростання", v: "4 → 19 співробітників", from: 4, to: 19 }
+  ],
+  task: "Побудувати зрозумілу та масштабовану систему проведення оплат.",
+  autonomy: "Рішення по оплатах ухвалює сам співробітник — не CEO, не Operations, не бухгалтер.",
+  deciders: ["CEO", "Operations", "Бухгалтер"],
+  // who = до кого йшло питання «до»
+  rows: [
+    { q: "провести оплату", cat: "Процес", who: "Operations",
+      before: "Спитай Operations",
+      after: "SOP і гайди в Notion, Loom-відео по кожному процесу, навчання на онбордингу",
+      tools: ["SOP", "Loom", "Онбординг"] },
+    { q: "обрати: готівка чи безготівка", cat: "Процес", who: "CEO",
+      before: "Спитай CEO",
+      after: "Чіткі правила: коли що обирати і чому",
+      tools: ["Правила"] },
+    { q: "оплатити готівкою", cat: "Готівка", who: "Навмання",
+      before: "Візьми гроші з шухляди",
+      after: "Алгоритм видачі й обліку готівки, відповідальна особа, таблиця обліку, ритми звірки",
+      tools: ["Таблиця готівки", "Відповідальний", "Звірка"] },
+    { q: "зафіксувати витрату", cat: "Облік", who: "Навмання",
+      before: "«Потім зведемо». Плутанина статей витрат в ERP і фінзвіті",
+      after: "Окремі флоу для готівки й безготівки, обовʼязковий апрув в окремому чаті, статті витрат за єдиним довідником",
+      tools: ["Довідник статей", "Чат апрувів"] },
+    { q: "обрати контрагента", cat: "Облік", who: "Бухгалтер",
+      before: "Бухгалтер завертає платіж: не той контрагент або немає коштів",
+      after: "Визначені правила, контрагенти закріплені за кожним менеджером",
+      tools: ["Правила"] },
+    { q: "знайти реквізити", cat: "Облік", who: "Бухгалтер",
+      before: "Спитай бухгалтера",
+      after: "У базі знань і закріплені в робочому чаті. Operations регулярно оновлює",
+      tools: ["База знань"] },
+    { q: "компенсувати оплату з власної картки", cat: "Компенсації", who: "Operations",
+      before: "Напиши Operations, хай проведе",
+      after: "Облік у таблиці, компенсація раз на місяць у фіксовану дату",
+      tools: ["Таблиця компенсацій"] },
+    { q: "оплатити фрілансеру погодинно", cat: "Фрілансери", who: "Навмання",
+      before: "«Здається, Маша платила цього місяця — спитай»",
+      after: "Шаблон звіту годин; Operations проводить централізовано раз на місяць у фіксовані дати; шаблони рахунків і актів для фрілансерів",
+      tools: ["Трекінг годин", "Шаблони актів"] },
+    { q: "вирішити: з договором чи без", cat: "Процес", who: "Operations",
+      before: "Спитай Operations",
+      after: "Памʼятка: як визначити, чи потрібен договір",
+      tools: ["Памʼятка"] },
+    { q: "купити смаколики в офіс", cat: "Компенсації", who: "Навмання",
+      before: "Заплати з картки, компенсуємо потім",
+      after: "Флоу корпоративних коштів: шаблон місячного бюджету → узгодження з Operations → кошти на картку → звіт по витратах",
+      tools: ["Шаблони бюджетів"] }
+  ],
+  phases: [
+    { t: "Дослідження", items: ["Зібрала вимоги й консультації з бухгалтерією, фінвідділом та юристами"] },
+    { t: "Політики", items: ["Розробила та узгодила політики з CEO"] },
+    { t: "Інструменти", items: ["Створила SOP, таблиці, шаблони, довідники та відеогайди"] },
+    { t: "Ролі та ритми", items: ["Закріпила відповідальних", "Налаштувала операційні ритми, точки контролю, звітність і дати регулярних оплат"] },
+    { t: "Впровадження", items: ["Запускала кожне нововведення: опис, відеогайди, оголошення, відеозустрічі з командою"] },
+    { t: "Підтримка", items: ["Навчала новачків і консультувала команду", "Проводила регулярний аудит виконання процесу"] }
+  ],
+  materials: [
+    "Повний SOP", "Таблиця обліку готівки", "Облік робочих витрат і компенсацій",
+    "Шаблон трекінгу часу фрілансерів", "Довідник статей витрат в ERP", "Актуальні реквізити",
+    "Памʼятка «Чи потрібен договір»", "Шаблони місячних бюджетів: офіс, одяг, маркетинг", "Навчальні відео в Loom"
+  ],
+  results: [
+    "Зʼявилася єдина логіка процесу",
+    "Команда почала самостійно знаходити інформацію",
+    "Процес став контрольованим і відтворюваним",
+    "Знизилося операційне навантаження на CEO"
+  ]
+};
+
+// Плаваюча навігація між прототипами
+document.addEventListener("DOMContentLoaded", () => {
+  const cur = (location.pathname.match(/p(\d)\.html/) || [])[1];
+  const nav = document.createElement("nav");
+  nav.className = "pnav";
+  nav.innerHTML = `<a href="index.html">Огляд</a><a href="hybrid.html" class="${/hybrid/.test(location.pathname) ? "on" : ""}">Збірка</a>` +
+    [1, 2, 3, 4, 5].map(n => `<a href="p${n}.html" class="${cur == n ? "on" : ""}">P${n}</a>`).join("");
+  document.body.appendChild(nav);
+});
+</script>
+<script>
+const C=CASE,$=s=>document.querySelector(s);
+$("#co").textContent=C.company;$("#title").textContent=C.title;$("#desc").textContent=C.companyDesc;
+
+// лічильник 4 → 19
+let n=4;const iv=setInterval(()=>{$("#n").textContent=++n;if(n>=19)clearInterval(iv)},80);
+
+// хмара
+const pos=[[1,4],[30,0],[58,10],[6,30],[40,24],[66,38],[2,58],[32,54],[58,70],[14,84]];
+$("#cloud").innerHTML=C.rows.map((r,i)=>`<div class="bub" style="left:${pos[i][0]}%;top:${pos[i][1]}%;transition-delay:${i*70}ms">${r.before}</div>`).join("");
+
+// задача
+$("#task").textContent=C.task;
+$("#who").innerHTML=`<i class="lbl" style="font-style:normal;margin-right:4px">Хто вирішує, як платити?</i>`+C.deciders.map(d=>`<span>${d}</span>`).join("")+`<em>Співробітник сам</em>`;
+
+// повзунок
+const row=(r,k)=>`<div class="row"><b>${r.q}</b><span>${r[k]}</span></div>`;
+$("#la").innerHTML=C.rows.map(r=>row(r,"after")).join("");$("#lbr").innerHTML=C.rows.map(r=>row(r,"before")).join("");
+const cmp=$("#cmp");let drag=false;
+function setX(x){const b=cmp.getBoundingClientRect();const p=Math.max(0,Math.min(100,(x-b.left)/b.width*100));$("#lb").style.clipPath=`inset(0 ${100-p}% 0 0)`;$("#h").style.left=p+"%";}
+cmp.addEventListener("pointerdown",e=>{if(window.EDITING)return;drag=true;setX(e.clientX);cmp.setPointerCapture(e.pointerId)});
+cmp.addEventListener("pointermove",e=>drag&&setX(e.clientX));cmp.addEventListener("pointerup",()=>drag=false);
+
+// таймлайн
+$("#tl").insertAdjacentHTML("beforeend",C.phases.map(p=>`<div class="step"><b>${p.t}</b><ul>${p.items.map(i=>`<li>${i}</li>`).join("")}</ul></div>`).join(""));
+// стрілки хаосу: [звідки, куди, наскільки далеко вліво, підпис]
+const loops=[[2,1,40,"ще коло правок"],[4,1,95,"а давайте інакше"],[3,0,70,""],[5,2,120,"і знову"],[4,3,30,""]];
+let mode="plan";
+function drawChaos(){
+  const tl=$("#tl"),svg=$("#chaos"),steps=[...tl.querySelectorAll(".step")];
+  svg.setAttribute("width",tl.clientWidth);svg.setAttribute("height",tl.clientHeight);
+  if(mode!="real"){svg.innerHTML="";return}
+  const lineX=parseFloat(getComputedStyle(tl).paddingLeft)-14;
+  const y=i=>steps[i].offsetTop+10;
+  svg.innerHTML=`<defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 1 L9 5 L0 9" fill="none" stroke="var(--bad)" stroke-width="1.6"/></marker></defs>`+
+    loops.map(([a,b,k,t],i)=>{const x=lineX-10,y1=y(a),y2=y(b),cx=Math.max(4,x-k),wob=(i%2?8:-6);
+      return `<path d="M${x} ${y1} C ${cx} ${y1+wob}, ${cx-wob} ${y2-wob}, ${x} ${y2}" marker-end="url(#ah)"/>`+
+        (t?`<text x="${Math.max(0,cx-6)}" y="${(y1+y2)/2}" text-anchor="start" transform="rotate(-8 ${cx} ${(y1+y2)/2})">${t}</text>`:"");}).join("");
+  svg.querySelectorAll("path:not(marker path)").forEach((p,i)=>{const L=p.getTotalLength();p.style.strokeDasharray=L;p.style.strokeDashoffset=L;
+    p.getBoundingClientRect();p.style.transition=`stroke-dashoffset .7s ease ${i*.18}s`;p.style.strokeDashoffset=0;});
+}
+document.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>{mode=b.dataset.m;
+  document.querySelectorAll(".seg button").forEach(x=>x.classList.toggle("on",x===b));
+  $("#tl").classList.toggle("real",mode=="real");$("#cap").classList.toggle("on",mode=="real");setTimeout(drawChaos,mode=="real"?520:0);});
+addEventListener("resize",drawChaos);drawChaos();
+
+$("#mat").innerHTML=C.materials.map(m=>`<span>${m}</span>`).join("");
+$("#res").innerHTML=C.results.map(r=>`<li>${r}</li>`).join("");
+
+// анімації при скролі
+function reveal(){[["#cloud","in"],["#who","go"]].forEach(([s,c])=>{const r=$(s).getBoundingClientRect();if(r.top<innerHeight*.85&&r.bottom>0)$(s).classList.add(c)})}
+addEventListener("scroll",reveal,{passive:true});addEventListener("resize",reveal);reveal();
+</script><div class="edbar"><button id="edT" class="pri">✎ Редагувати текст</button><button class="x" id="edC">Копіювати правки</button><button class="x" id="edR">Скинути</button></div><div class="toast" id="toast"></div>
+<script>
+// Режим редагування: правки зберігаються в цьому браузері
+(function(){
+  const KEY="case-pay-edits-v1",SEL="h1,h2,h3,p,li,.lbl,.bub,.who span,.who em,.who i,.chips span,.row b,.row span,.step b,.cap";
+  const els=[...document.querySelectorAll(SEL)].filter(e=>!e.closest(".pnav,.edbar,.seg,.wf-note,.todo"));
+  const list=els.filter(e=>!els.some(o=>o!==e&&o.contains(e)));
+  const orig=list.map(e=>e.innerHTML),origTxt=list.map(e=>e.innerText.trim());
+  let saved={};try{saved=JSON.parse(localStorage.getItem(KEY)||"{}")}catch(e){}
+  const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(saved))}catch(e){}};
+  const toast=t=>{const el=document.getElementById("toast");el.textContent=t;el.classList.add("on");setTimeout(()=>el.classList.remove("on"),2200)};
+  const rowsA=[...document.querySelectorAll("#la .row b")],rowsB=[...document.querySelectorAll("#lbr .row b")];
+  list.forEach((e,i)=>{e.dataset.ed=i;
+    if(saved[i]!=null){e.innerHTML=saved[i];e.classList.add("changed")}
+    e.addEventListener("input",()=>{saved[i]=e.innerHTML;e.classList.add("changed");
+      const a=rowsA.indexOf(e),b=rowsB.indexOf(e); // назва питання дублюється в обох шарах повзунка
+      const twin=a>-1?rowsB[a]:b>-1?rowsA[b]:null;
+      if(twin){twin.innerHTML=e.innerHTML;saved[twin.dataset.ed]=e.innerHTML;twin.classList.add("changed")}
+      save()});
+    e.addEventListener("keydown",ev=>{if(ev.key==="Enter"&&!ev.shiftKey){ev.preventDefault();e.blur()}});
+  });
+  let on=false;const T=document.getElementById("edT");
+  T.onclick=()=>{on=!on;window.EDITING=on;document.body.classList.toggle("editing",on);list.forEach(e=>e.contentEditable=on);
+    T.textContent=on?"✓ Готово":"✎ Редагувати текст";if(on)toast("Клікніть на будь-який текст і правте")};
+  document.getElementById("edC").onclick=async()=>{
+    const out=list.map((e,i)=>saved[i]!=null&&e.innerText.trim()!==origTxt[i]?`— Було: ${origTxt[i]}\n  Стало: ${e.innerText.trim()}`:null).filter(Boolean);
+    if(!out.length){toast("Правок ще немає");return}
+    const txt="Правки до кейсу ("+out.length+"):\n\n"+out.join("\n\n");
+    try{await navigator.clipboard.writeText(txt);toast("Скопійовано "+out.length+" правок — вставте в чат")}
+    catch(e){prompt("Скопіюйте вручну:",txt)}};
+  document.getElementById("edR").onclick=()=>{if(!confirm("Скинути всі правки?"))return;
+    list.forEach((e,i)=>{e.innerHTML=orig[i];e.classList.remove("changed")});saved={};save();toast("Правки скинуто")};
+})();
+</script>
+</body></html>
